@@ -52,3 +52,35 @@ src/
 
 Faça **um commit por avanço** (Conventional Commits, ex.: `feat(entregas): valida origem ≠ destino`).
 Bom trabalho! 🚀
+
+---
+
+## Status da Atividade 05 (Entregas) — Concluída
+
+Módulo de entregas totalmente implementado com arquitetura em camadas (Controller, Service, Repository) e injeção de dependência.
+
+### Exemplos de Requisições Manuais (cURL)
+
+```bash
+# 1. Criar uma nova entrega
+curl -X POST http://localhost:3000/api/entregas \
+  -H "Content-Type: application/json" \
+  -d '{"descricao": "Pacote de Livros", "origem": "Maceió", "destino": "Recife"}'
+
+# 2. Listar todas as entregas
+curl http://localhost:3000/api/entregas
+
+# 3. Filtrar entregas por status
+curl "http://localhost:3000/api/entregas?status=CRIADA"
+
+# 4. Buscar entrega por ID
+curl http://localhost:3000/api/entregas/1
+
+# 5. Avançar status da entrega (CRIADA -> EM_TRANSITO -> ENTREGUE)
+curl -X PATCH http://localhost:3000/api/entregas/1/avancar
+
+# 6. Obter histórico da entrega
+curl http://localhost:3000/api/entregas/1/historico
+
+# 7. Cancelar entrega
+curl -X PATCH http://localhost:3000/api/entregas/1/cancelar
