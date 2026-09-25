@@ -1,23 +1,24 @@
-// Delivery Tracker — Exercício do Cap. 4.
-// Este é o ponto de entrada. Ele deve APENAS configurar o app e montar as rotas.
-// A regra de negócio fica no Service; o acesso a dados no Repository; a
-// composição das dependências (injeção) fica no seu arquivo de rotas.
-//
-// Comece implementando as camadas em src/ (veja o README) e vá rodando o
-// autograder: `npm run check` (com o servidor no ar) ou pela aba Actions no push.
 import express from 'express';
-// import { criarRotas } from './src/routes/index.js';  // <- descomente quando criar as rotas
+import routes from './src/routes/index.js';
+import { AppError } from './src/utils/AppError.js';
 
 const app = express();
 app.use(express.json());
 
-// Health check exigido pelo contrato de execução (não remova).
+// Health check exigido pelo contrato de execução
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
-// TODO: monte aqui o roteador da sua API (composition root em src/routes):
-// app.use('/api', criarRotas());
+app.use('/api', routes);
 
-// 404 para rotas não mapeadas (mantenha por último, antes do listen).
+// Middleware global para capturar erros do AppError (400, 404, 409, 422)
+app.use((err, req, res, next) => {
+    if (err instanceof AppError) {
+        return res.status(err.statusCode).json({ erro: err.message });
+    }
+    return res.status(500).json({ erro: 'Erro interno do servidor' });
+});
+
+// 404 para rotas não mapeadas
 app.use((req, res) => res.status(404).json({ erro: 'recurso não encontrado' }));
 
 const PORT = process.env.PORT || 3000;
