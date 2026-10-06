@@ -84,3 +84,36 @@ curl http://localhost:3000/api/entregas/1/historico
 
 # 7. Cancelar entrega
 curl -X PATCH http://localhost:3000/api/entregas/1/cancelar
+
+```
+
+## Status da Atividade 06 (Motoristas) — Concluída
+
+Módulo de motoristas, atribuição de entregas, filtros combinados e injeção de dependências totalmente implementados com 100% de aprovação no autograder (**122/122 pontos**).
+
+### Exemplos de Requisições Manuais (cURL)
+
+```bash
+# 1. Cadastrar um novo motorista
+curl -X POST http://localhost:3000/api/motoristas \
+  -H "Content-Type: application/json" \
+  -d '{"nome": "Carlos Silva", "cpf": "12345678900", "placaVeiculo": "ABC-1234"}'
+
+# 2. Listar todos os motoristas
+curl http://localhost:3000/api/motoristas
+
+# 3. Buscar motorista por ID
+curl http://localhost:3000/api/motoristas/1
+
+# 4. Atribuir motorista a uma entrega
+curl -X PATCH http://localhost:3000/api/entregas/1/atribuir \
+  -H "Content-Type: application/json" \
+  -d '{"motoristaId": 1}'
+
+# 5. Listar entregas atreladas a um motorista
+curl http://localhost:3000/api/motoristas/1/entregas
+
+# 6. Filtrar entregas de um motorista por status
+curl "http://localhost:3000/api/motoristas/1/entregas?status=CRIADA"
+
+```
