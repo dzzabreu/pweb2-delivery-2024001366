@@ -35,7 +35,7 @@ export class EntregasService {
         return entrega;
     }
 
-    async avancarStatus(id) {
+    async avancar(id) {
         const entrega = await this.buscarPorId(id);
 
         let novoStatus;
@@ -88,7 +88,7 @@ export class EntregasService {
     }
 
     async atribuirMotorista(id, motoristaId) {
-        if (!motoristaId) {
+        if (motoristaId === undefined || motoristaId === null || motoristaId === '') {
             throw new AppError('motoristaId é obrigatório', 400);
         }
 

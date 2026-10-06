@@ -26,16 +26,19 @@ export class MotoristasRepository {
     }
 
     async buscarPorId(id) {
-        return this.database.motoristas.find((m) => m.id === Number(id)) ?? null;
+        return this.database.motoristas.find((m) => String(m.id) === String(id)) ?? null;
     }
 
     async buscarPorCpf(cpf) {
-        return this.database.motoristas.find((m) => m.cpf === cpf) ?? null;
+        return this.database.motoristas.find((m) => String(m.cpf).trim() === String(cpf).trim()) ?? null;
     }
 
     async criar({ nome, cpf, placaVeiculo}) {
+        const id = this.database.proximoMotoristaId ?? (this.database.motoristas.length + 1);
+        if ('proximoMotoristaId' in this.database) this.database.proximoMotoristaId++;
+
         const novoMotorista = {
-            id: this.database.proximoMotoristasId++,
+            id,
             nome,
             cpf,
             placaVeiculo: placaVeiculo || null,

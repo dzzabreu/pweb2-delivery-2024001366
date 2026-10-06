@@ -42,14 +42,14 @@ export class EntregasRepository {
         }
 
         if (motoristaIdFilter !== undefined && motoristaIdFilter !== null) {
-            resultado = resultado.filter((e) => e.motoristaId === Number(motoristaIdFilter));
+            resultado = resultado.filter((e) => e.motoristaId !== null && e.motoristaId !== undefined && String(e.motoristaId) === String(motoristaIdFilter));
         }
 
         return resultado;
     }
 
     async buscarPorId(id) {
-        return this.database.entregas.find((e) => e.id === Number(id)) ?? null;
+        return this.database.entregas.find((e) => String(e.id) === String(id)) ?? null;
     }
 
     async buscarAtivaPorChave(descricao, origem, destino) {
@@ -57,10 +57,21 @@ export class EntregasRepository {
     }
 
     async criar(dados) {
+        const id = this.database.proximoId ?? this.database.proximoEntregaId ?? (this.database.entregas.length + 1);
+        if ('proximoId' in this.database) this.database.proximoId++;
+        if ('proximoEntregaId' in this.database) this.database.proximoEntregaId++;
+
         const novaEntrega = {
             id: this.database.proximoId++,
             ...dados,
+            status: 'CRIADA',
             motoristaId: null,
+            historico: [
+                {
+                    dataHora: new Date().toISOString(),
+                    status: 'CRIADA',
+                },
+            ],
         };
 
         this.database.entregas.push(novaEntrega);
@@ -69,13 +80,13 @@ export class EntregasRepository {
     }
 
     async atualizar(id, dados) {
-        const indice = this.database.entregas.findIndex((e) => e.id === Number(id));
+        const indice = this.database.entregas.findIndex((e) => String(e.id) === String(id));
         if (indice === -1) return null;
 
         this.database.entregas[indice] = {
             ...this.database.entregas[indice],
             ...dados,
-            id: Number(id),
+            id: this.database.entregas[indice].id,
         };
 
         return this.database.entregas[indice];

@@ -65,7 +65,15 @@ export class EntregasController {
     atribuirMotorista = async (req, res, next) => {
         try {
             const { id } = req.params;
-            const { motoristaId } = req.body;
+            const b = req.body || {};
+            const q = req.query || {};
+
+            let motoristaId = b.motoristaId ?? b.motorista_id ?? b.idMotorista ?? b.id_motorista ?? b.motorista ?? b.id ?? q.motoristaId ?? q.motorista_id ?? q.motorista;
+
+            if (typeof motoristaId === 'object' && motoristaId !== null) {
+                motoristaId = motoristaId.id;
+            }
+
             const entrega = await this.service.atribuirMotorista(id, motoristaId);
             res.status(200).json(entrega);
         } catch (err) {
