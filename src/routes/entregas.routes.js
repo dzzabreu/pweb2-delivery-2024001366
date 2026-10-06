@@ -9,6 +9,7 @@ export function mapearRotasEntregas(controller) {
     router.patch('/:id/avancar', controller.avancar);
     router.patch('/:id/cancelar', controller.cancelar);
     router.get('/:id/historico', controller.obterHistorico);
+    router.patch('/:id/atribuir', controller.atribuirMotorista);
 
     return router;
 }
