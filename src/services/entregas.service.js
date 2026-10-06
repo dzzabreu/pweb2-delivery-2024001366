@@ -1,75 +1,63 @@
 import { AppError } from '../utils/AppError.js';
 
 export class EntregasService {
-    constructor(repository) {
-        this.repository = repository;
+    constructor(entregasRepository, motoristasRepository = null) {
+        this.entregasRepository = entregasRepository;
+        this.motoristasRepository = motoristasRepository;
     }
 
     async criar({ descricao, origem, destino }) {
         if (!descricao || !origem || !destino) {
-            throw new AppError('Campos obrigatórios: descricao, origem e destino', 400);
+            throw new AppError('Descrição, origem e destino são obrigatórios', 400);
         }
 
-        if (origem === destino) {
-            throw new AppError('A origem deve ser diferente do destino', 400);
+        if (origem.trim().toLowerCase() === destino.trim().toLowerCase()) {
+            throw new AppError('Origem e destino não podem ser iguais', 400);
         }
 
-        const duplicata = await this.repository.buscarAtivaPorChave(descricao, origem, destino);
-        if (duplicata) {
-            throw new AppError('Já existe uma entrega ativa com a mesma descrição, origem e destino', 409);
+        const entregaAtiva = await this.entregasRepository.buscarAtivaPorChave(descricao, origem, destino);
+        if (entregaAtiva) {
+            throw new AppError('Já existe uma entrega ativa com mesma descrição, origem e destino', 409);
         }
 
-        const novaEntregaData = {
-            descricao,
-            origem,
-            destino,
-            status: 'CRIADA',
-            historico: [
-                {
-                    data: new Date().toISOString(),
-                    descricao: 'Entrega criada',
-                },
-            ],
-        };
-
-        return this.repository.criar(novaEntregaData);
+        return await this.entregasRepository.criar({ descricao, origem, destino });
     }
 
-    async listarTodos(status) {
-        return this.repository.listarTodos(status);
+    async listarTodos(filtros) {
+        return await this.entregasRepository.listarTodos(filtros);
     }
 
     async buscarPorId(id) {
-        const entrega = await this.repository.buscarPorId(id);
+        const entrega = await this.entregasRepository.buscarPorId(id);
         if (!entrega) {
             throw new AppError('Entrega não encontrada', 404);
         }
         return entrega;
     }
 
-    async avancar(id) {
+    async avancarStatus(id) {
         const entrega = await this.buscarPorId(id);
 
-        let novoStatus = '';
+        let novoStatus;
         if (entrega.status === 'CRIADA') {
             novoStatus = 'EM_TRANSITO';
         } else if (entrega.status === 'EM_TRANSITO') {
             novoStatus = 'ENTREGUE';
         } else {
-            throw new AppError('Transição de status inválida', 422);
+            throw new AppError('Não é possível avançar o status desta entrega', 422);
         }
 
-        const novoHistorico = [
-            ...entrega.historico,
+        const historicoAtualizado = [
+            ...(entrega.historico || []),
             {
-                data: new Date().toISOString(),
-                descricao: `Status alterado para ${novoStatus}`,
+                dataHora: new Date().toISOString(),
+                status: novoStatus,
             },
         ];
 
-        return this.repository.atualizar(id, {
+        return await this.entregasRepository.atualizar(id, {
             status: novoStatus,
-            historico: novoHistorico,
+            historico: historicoAtualizado,
         });
     }
 
@@ -77,25 +65,62 @@ export class EntregasService {
         const entrega = await this.buscarPorId(id);
 
         if (entrega.status === 'ENTREGUE' || entrega.status === 'CANCELADA') {
-            throw new AppError('Não é possível cancelar uma entrega entregue ou já cancelada', 422);
+            throw new AppError('Não é possível cancelar esta entrega', 422);
         }
 
-        const novoHistorico = [
-            ...entrega.historico,
+        const historicoAtualizado = [
+            ...(entrega.historico || []),
             {
-                data: new Date().toISOString(),
-                descricao: 'Entrega cancelada',
+                dataHora: new Date().toISOString(),
+                status: 'CANCELADA',
             },
         ];
 
-        return this.repository.atualizar(id, {
+        return await this.entregasRepository.atualizar(id, {
             status: 'CANCELADA',
-            historico: novoHistorico,
+            historico: historicoAtualizado,
         });
     }
 
     async obterHistorico(id) {
         const entrega = await this.buscarPorId(id);
         return entrega.historico;
+    }
+
+    async atribuirMotorista(id, motoristaId) {
+        if (!motoristaId) {
+            throw new AppError('motoristaId é obrigatório', 400);
+        }
+
+        const entrega = await this.entregasRepository.buscarPorId(id);
+        if (!entrega) {
+            throw new AppError('Entrega não encontrada', 404);
+        }
+
+        if (entrega.status !== 'CRIADA') {
+            throw new AppError('Apenas entregas com status CRIADA podem receber motorista', 422);
+        }
+
+        const motorista = await this.motoristasRepository.buscarPorId(motoristaId);
+        if (!motorista) {
+            throw new AppError('Motorista não encontrado', 404);
+        }
+
+        if (motorista.status !== 'ATIVO') {
+            throw new AppError('Motorista inativo não pode ser atribuído', 422);
+        }
+
+        const historicoAtualizado = [
+            ...(entrega.historico || []),
+            {
+                dataHora: new Date().toISOString(),
+                status: entrega.status,
+            },
+        ];
+
+        return await this.entregasRepository.atualizar(id, {
+            motoristaId: Number(motoristaId),
+            historico: historicoAtualizado,
+        });
     }
 }
