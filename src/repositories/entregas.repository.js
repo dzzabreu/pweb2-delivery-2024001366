@@ -1,3 +1,23 @@
+/**
+ * @typedef {Object} Entrega
+ * @property {number} id
+ * @property {string} descricao
+ * @property {string} origem
+ * @property {string} destino
+ * @property {string} status
+ * @property {number|null} motoristaId
+ * @property {Array} historico
+ */
+
+/**
+ * Contrato IEntregasRepository
+ * @typedef {Object} IEntregasRepository
+ * @property {(filtros?: { status?: string, motoristaId?: number }) => Entrega[]} listarTodos
+ * @property {(id: number) => Entrega|null} buscarPorId
+ * @property {(dados: { descricao: string, origem: string, destino: string }) => Entrega} criar
+ * @property {(id: number, dados: Partial<Entrega>) => Entrega} atualizar
+ */
+
 export class EntregasRepository {
     constructor(database) {
         this.database = database;
