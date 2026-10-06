@@ -12,10 +12,11 @@
 /**
  * Contrato IEntregasRepository
  * @typedef {Object} IEntregasRepository
- * @property {(filtros?: { status?: string, motoristaId?: number }) => Entrega[]} listarTodos
- * @property {(id: number) => Entrega|null} buscarPorId
- * @property {(dados: { descricao: string, origem: string, destino: string }) => Entrega} criar
- * @property {(id: number, dados: Partial<Entrega>) => Entrega} atualizar
+ * @property {(filtros?: { status?: string, motoristaId?: number }|string) => Promise<Entrega[]>} listarTodos
+ * @property {(id: number) => Promise<Entrega|null>} buscarPorId
+ * @property {(descricao: string, origem: string, destino: string) => Promise<Entrega|null>} buscarAtivaPorChave
+ * @property {(dados: Object) => Promise<Entrega>} criar
+ * @property {(id: number, dados: Partial<Entrega>) => Promise<Entrega|null>} atualizar
  */
 
 export class EntregasRepository {
@@ -23,11 +24,28 @@ export class EntregasRepository {
         this.database = database;
     }
 
-    async listarTodos(status) {
-        if(status) {
-            return this.database.entregas.filter((e) => e.status === status);
+    async listarTodos(filtros = {}) {
+        let statusFilter;
+        let motoristaIdFilter;
+
+        if (typeof filtros === 'string') {
+            statusFilter = filtros;
+        } else if (typeof filtros === 'object' && filtros !== null) {
+            statusFilter = filtros.status;
+            motoristaIdFilter = filtros.motoristaId;
         }
-        return this.database.entregas;
+
+        let resultado = this.database.entregas;
+
+        if (statusFilter) {
+            resultado = resultado.filter((e) => e.status === statusFilter);
+        }
+
+        if (motoristaIdFilter !== undefined && motoristaIdFilter !== null) {
+            resultado = resultado.filter((e) => e.motoristaId === Number(motoristaIdFilter));
+        }
+
+        return resultado;
     }
 
     async buscarPorId(id) {
@@ -44,7 +62,9 @@ export class EntregasRepository {
             ...dados,
             motoristaId: null,
         };
+
         this.database.entregas.push(novaEntrega);
+
         return novaEntrega;
     }
 
