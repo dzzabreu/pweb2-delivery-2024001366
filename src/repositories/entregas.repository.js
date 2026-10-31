@@ -57,12 +57,11 @@ export class EntregasRepository {
     }
 
     async criar(dados) {
-        const id = this.database.proximoId ?? this.database.proximoEntregaId ?? (this.database.entregas.length + 1);
-        if ('proximoId' in this.database) this.database.proximoId++;
-        if ('proximoEntregaId' in this.database) this.database.proximoEntregaId++;
+        const id = this.database.proximaEntregaId ?? (this.database.entregas.length + 1);
+        if ('proximaEntregaId' in this.database) this.database.proximaEntregaId++;
 
         const novaEntrega = {
-            id: this.database.proximoId++,
+            id,
             ...dados,
             status: 'CRIADA',
             motoristaId: null,
